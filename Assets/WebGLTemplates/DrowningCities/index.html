@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | %UNITY_WEB_NAME%</title>
+    <script src="%UNITY_WEBGL_LOADER_URL%"></script>
+    <script src="./underscore-min.js"></script>
+    <script>
+      var unityAppReady = false;
+      var currentSearchResults;
+      var currentSelectedResult;
+      var searchEl, searchResultsEl;
+      var gameInstance;
+
+      var fetchSuggestions = (typed) => {
+        var url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${typed}.json?types=place&access_token=pk.eyJ1IjoibmVyaWsiLCJhIjoiY2o4bzluanV2MDBuajMzcGN2M3lwMXNlNiJ9.xCX0tjN_GdtR_CjJpYgPjg`;
+
+        fetch(url)
+          .then(r => r.json())
+          .then(data => {
+            currentSearchResults = data.features;
+            var html = (data.features.length)
+              ? data.features.map((feature, i) => `<div class='entry' data-index='${i}'>${feature.place_name}</div>`)
+              : [];
+            searchResultsEl.innerHTML = html.join('');
+          })
+      }
+      var fetchSuggestionsDebounced = _.debounce(fetchSuggestions, 500);
+
+      var showCity = () => {
+        console.log(currentSelectedResult);
+        var serializedLatLng = currentSelectedResult.center.reverse().join(',');
+        console.log(serializedLatLng);
+        if (gameInstance !== undefined) {
+          gameInstance.SendMessage('Main', 'SetLatLng', serializedLatLng);
+        }
+      }
+
+      var init = () => {
+        searchEl = document.querySelector('.js-search');
+        searchEl.addEventListener('input', e => {
+          if (e.target.value !== '') {
+            fetchSuggestionsDebounced(e.target.value);
+          }
+        })
+
+        searchResultsEl = document.querySelector('.js-search-results');
+        searchResultsEl.addEventListener('click', e => {
+          var index = parseInt(e.target.getAttribute('data-index'));
+          currentSelectedResult = currentSearchResults[index];
+          if (unityAppReady === true) {
+            showCity();
+          }
+          console.log(e.currentTarget)
+        })
+      }
+      window.addEventListener('load', init);
+
+      try {
+        gameInstance = UnityLoader.instantiate("gameContainer", "%UNITY_WEBGL_BUILD_URL%", {
+          onProgress: function(e, t) {
+            console.log(e, t)
+          }
+        });
+
+        window.onUnityAppReady = function(someArg) {
+          console.log('onUnityAppReady', someArg);
+          unityAppReady = true;
+          if (currentSelectedResult !== undefined) {
+            showCity();
+          }
+        }
+
+        // document.addEventListener('click', function() {
+        //   console.log('click test send latlng to Unity')
+        //   gameInstance.SendMessage('Main', 'SetLatLng', '42.3605,-71.0596');
+        // });
+      } catch(e) {
+        console.log('no unity')
+        // fake app ready
+        unityAppReady = true;
+      }
+
+    </script>
+  </head>
+
+  <body>
+    <div id="js-search-overlay search-overlay">
+      <input class="js-search search"></input>
+      <div class="js-search-results search-results"></input>
+    </div>
+    <div id="gameContainer" style="width: %UNITY_WIDTH%px; height: %UNITY_HEIGHT%px; margin: auto"></div>
+
+
+  </body>
+
+</html>
