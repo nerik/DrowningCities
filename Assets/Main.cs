@@ -13,6 +13,7 @@ public class Main : MonoBehaviour {
 	Transform map;
 
 	[SerializeField] Transform mapContainer;
+	CameraControls cameraControls;
 
 	int currentCityIndex = -1;
 
@@ -29,6 +30,8 @@ public class Main : MonoBehaviour {
 		UnityEngine.WebGLInput.captureAllKeyboardInput = false;
 		#endif
 		Application.ExternalCall("onUnityAppReady", "Hello from Unity!");
+		Debug.Log (Camera.main);
+		cameraControls = Camera.main.transform.GetComponent<CameraControls> ();
 		this.CreateMap();
 
 	}
@@ -37,8 +40,6 @@ public class Main : MonoBehaviour {
 		if (map != null) {
 			Destroy (map.gameObject);
 		}
-
-		Debug.Log (rawLatLng);
 
 		Vector2d latLng;
 		if (rawLatLng == null) {
@@ -53,6 +54,8 @@ public class Main : MonoBehaviour {
 				float.Parse (rawLatLngArr [1])
 			);
 		}
+
+		cameraControls.StartIntro ();
 
 		map = Instantiate(Map, new Vector3(0, 0, 0), Quaternion.identity);
 

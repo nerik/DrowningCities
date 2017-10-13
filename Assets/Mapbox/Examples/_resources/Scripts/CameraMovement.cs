@@ -38,6 +38,8 @@ namespace Mapbox.Examples
 			var y = 0f;
 			var z = 0f;
 
+
+
 			if (Input.GetMouseButton(0))
 			{
 				var mousePosition = Input.mousePosition;
@@ -54,6 +56,9 @@ namespace Mapbox.Examples
 			{
 				_shouldDrag = false;
 			}
+
+			//Debug.Log (_shouldDrag);
+			//Debug.Log (Input.GetAxis ("Vertical"));
 
 			if (_shouldDrag == true)
 			{
